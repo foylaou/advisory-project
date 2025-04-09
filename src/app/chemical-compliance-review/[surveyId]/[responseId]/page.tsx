@@ -6,6 +6,11 @@ import { jsPDF } from 'jspdf';
 import SignatureComponent from "@/components/Signature";
 import { Loader2 } from "lucide-react";
 
+interface EnhancedOptions extends Options {
+  scale?: number;
+}
+
+
 export default function Page() {
   const params = useParams();
   const componentRef = useRef<HTMLDivElement>(null);
@@ -48,7 +53,7 @@ export default function Page() {
 
     try {
       // 使用 dom-to-image 將組件轉換為圖像
-      const options: Options = {
+      const options: EnhancedOptions = {
         quality: 1.0,
         bgcolor: '#ffffff', // 確保白色背景
         scale: 2 // 增加清晰度
