@@ -1,8 +1,9 @@
 // app/api/upload-pdf/route.ts
 import { NextRequest, NextResponse } from 'next/server';
+import { writeFile } from 'fs/promises';
+import { mkdir } from 'fs/promises';
 import path from 'path';
-import { google } from 'googleapis';
-import stream from 'stream';
+import SambaClient from 'samba-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -15,64 +16,55 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: '缺少必要參數' }, { status: 400 });
     }
 
-    // 设置Google云端硬盘认证
-    const auth = new google.auth.GoogleAuth({
-      keyFile: process.env.GOOGLE_SERVICE_ACCOUNT_KEY || 'path/to/your/service-account-key.json',
-      scopes: ['https://www.googleapis.com/auth/drive'],
-    });
-
-    const drive = google.drive({ version: 'v3', auth });
-
-    // 准备文件数据
+    // 將文件轉換為 Buffer
     const buffer = Buffer.from(await file.arrayBuffer());
     const filename = `survey_${surveyId}_response_${responseId}.pdf`;
 
-    // 创建可读流
-    const bufferStream = new stream.PassThrough();
-    bufferStream.end(buffer);
+    // 確保本地上傳目錄存在
+    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    await mkdir(uploadDir, { recursive: true });
 
-    // 上传文件到Google云端硬盘
-    const driveResponse = await drive.files.create({
-      requestBody: {
-        name: filename,
-        mimeType: 'application/pdf',
-      },
-      media: {
-        mimeType: 'application/pdf',
-        body: bufferStream,
-      },
+    // 保存到本地文件系統
+    const filepath = path.join(uploadDir, filename);
+    await writeFile(filepath, buffer);
+
+    // 準備 Samba 客戶端
+    const sambaClient = new SambaClient({
+      address: '//isha/共用區', // 服務器和共享名稱
+      username: 'foy', // 需要填入實際用戶名
+      password: 't0955787053S', // 需要填入實際密碼
+      domain: 'WORKGROUP', // 或您的實際域名
+      maxProtocol: 'SMB3', // 指定 SMB 協議版本
     });
 
-    // 获取文件ID
-    const fileId = driveResponse.data.id;
+    // 嘗試上傳到 Samba 共享
+    let smbUploaded = false;
+    try {
+      // 上傳文件到 Samba 共享，指定完整的目標路徑
+      await sambaClient.sendFile(
+        filepath,
+        '哲嘉/化學品管理安全督導/' + filename
+      );
+      console.log('文件已成功上傳到 Samba 共享');
+      smbUploaded = true;
+    } catch (smbError) {
+      console.error('上傳到 Samba 共享時發生錯誤:', smbError);
+      // 即使 Samba 上傳失敗，我們仍然返回成功，因為本地文件已保存
+    }
 
-    // 可选：设置文件权限（公开访问权限）
-    // 如果要设置为私有，可以跳过这一步
-    await drive.permissions.create({
-      fileId: fileId!,
-      requestBody: {
-        role: 'reader',
-        type: 'anyone',
-      },
-    });
-
-    // 获取文件的共享链接
-    const fileData = await drive.files.get({
-      fileId: fileId!,
-      fields: 'webViewLink',
-    });
-
-    const fileUrl = fileData.data.webViewLink;
+    // 返回可訪問的文件 URL
+    const fileUrl = `/uploads/${filename}`;
 
     return NextResponse.json({
       success: true,
-      fileId,
       fileUrl,
-      message: 'PDF 已成功上傳到Google雲端硬碟'
+      message: 'PDF 已成功上傳',
+      smbUploaded,
+      smbDetails: smbUploaded ? '已上傳至共享資料夾' : '僅保存於本地服務器'
     });
 
   } catch (error) {
-    console.error('上傳文件到Google雲端硬碟時發生錯誤:', error);
+    console.error('上傳文件時發生錯誤:', error);
     return NextResponse.json({
       error: '上傳失敗',
       details: error instanceof Error ? error.message : '未知錯誤'

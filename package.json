@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@types/dom-to-image": "^2.6.7",
+    "@types/smb2": "^0.2.4",
     "dom-to-image": "^2.6.0",
     "dom-to-image-more": "^3.5.0",
     "googleapis": "^148.0.0",
@@ -20,7 +21,9 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-signature-canvas": "^1.1.0-alpha.2",
-    "react-to-print": "^3.0.5"
+    "react-to-print": "^3.0.5",
+    "samba-client": "^7.2.0",
+    "smb2": "^0.2.11"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
