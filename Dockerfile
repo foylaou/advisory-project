@@ -102,7 +102,7 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/.next ./.next
 COPY --from=base /app/public ./public
 COPY --from=base /app/package.json ./package.json
-COPY --from=base /app/next.config.js ./next.config.js
+COPY --from=base /app/next.config.ts ./next.config.ts
 
 # 創建並設置上傳目錄的權限
 RUN mkdir -p upload_file/uploads && chmod 755 upload_file/uploads
