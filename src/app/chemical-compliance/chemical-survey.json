@@ -1,0 +1,242 @@
+{
+    "title": "化學品管理自主檢核表",
+    "pages": [
+        {
+            "name": "工廠管理及工廠危險物品自主檢核",
+            "elements": [
+                {
+                    "type": "radiogroup",
+                    "name": "督導對象轄區",
+                    "title": "督導對象轄區",
+                    "isRequired": true,
+                    "choices": [
+                        {"value": "產業園區", "text": "產業園區"},
+                        {"value": "科技產業園區", "text": "科技產業園區"}
+                    ]
+                },
+                {
+                    "type": "text",
+                    "inputType": "username",
+                    "name": "檢查人員",
+                    "title": "檢查人員",
+                    "isRequired": true
+                },
+                {
+                    "type": "text",
+                    "inputType": "phone",
+                    "name": "聯絡方式",
+                    "title": "聯絡方式",
+                    "isRequired": true,
+                    "validators": [
+                        {
+                            "type": "mobile"
+                        }
+                    ]
+                },
+                {
+                    "type": "text",
+                    "inputType": "text",
+                    "name": "公司名稱",
+                    "title": "公司名稱",
+                    "isRequired": true
+                },
+                {
+                    "type": "text",
+                    "inputType": "date",
+                    "name": "檢查日期",
+                    "title": "請選擇日期",
+                    "isRequired": true
+
+                },
+                {
+                    "type": "checkbox",
+                    "name": "查驗單位",
+                    "title": "查驗單位",
+                    "isRequired": true,
+                    "choices": [
+                        "勞動檢查機關",
+                        "環境保護局",
+                        "消防局",
+                        "經發局",
+                        "建築物公共安全管理機關"
+                    ],
+                    "showNoneItem": false,
+                    "colCount": 2,
+                    "description": "請選擇一個或多個查驗單位"
+                },
+                {
+                    "type": "text",
+                    "name": "檢核區域",
+                    "title": "檢核區域",
+                    "isRequired": true
+                },
+                {
+                    "type": "text",
+                    "inputType": "email",
+                    "name": "聯絡信箱",
+                    "title": "請輸入電子郵件",
+                    "isRequired": true,
+                    "validators": [
+                        {
+                            "type": "email"
+                        }
+                    ]
+                },
+
+                {
+                    "type": "radiogroup",
+                    "name": "工廠設廠完成後，是否依規定申請登記，經主管機關核准登記後，始得從事物品製造、加工。",
+                    "title": "工廠設廠完成後，是否依規定申請登記，經主管機關核准登記後，始得從事物品製造、加工。",
+                    "isRequired": true,
+                    "choices": [
+                        {"value": "符合", "text": "符合"},
+                        {"value": "不符合", "text": "不符合"},
+                        {"value": "不適用", "text": "不適用"}
+                    ]
+                },
+                {
+                    "type": "radiogroup",
+                    "name": "工廠有下列情形之一者，是否於設廠前取得設立許可：\n1. 依法律規定，設廠應經工業主管機關許可。\n2. 基於工業均衡發展、資源合理利用或節約能源等政策，經中央主管機關公告應經其許可。",
+                    "title": "工廠有下列情形之一者，是否於設廠前取得設立許可：\n1. 依法律規定，設廠應經工業主管機關許可。\n2. 基於工業均衡發展、資源合理利用或節約能源等政策，經中央主管機關公告應經其許可。",
+                    "isRequired": true,
+                    "choices": [
+                        {"value": "符合", "text": "符合"},
+                        {"value": "不符合", "text": "不符合"},
+                        {"value": "不適用", "text": "不適用"}
+                    ]
+                },
+                {
+                    "type": "radiogroup",
+                    "name": "運作者是否在報請備查之期限內，報備所運作之優先管理化學品運作資料，且資料完整。",
+                    "title": "運作者是否在報請備查之期限內，報備所運作之優先管理化學品運作資料，且資料完整。",
+                    "isRequired": true,
+                    "choices": [
+                        {"value": "符合", "text": "符合"},
+                        {"value": "不符合", "text": "不符合"},
+                        {"value": "不適用", "text": "不適用"}
+                    ]
+                },
+                {
+                    "type": "radiogroup",
+                    "name": "製造、儲存或處理公共危險物品達管制量30倍以上場所之管理權人，是否遴用保安監督人及保安檢查員。",
+                    "title": "製造、儲存或處理公共危險物品達管制量30倍以上場所之管理權人，是否遴用保安監督人及保安檢查員。",
+                    "isRequired": true,
+                    "choices": [
+                        {"value": "符合", "text": "符合"},
+                        {"value": "不符合", "text": "不符合"},
+                        {"value": "不適用", "text": "不適用"}
+                    ]
+                },
+                {
+                    "type": "radiogroup",
+                    "name": "第四類毒性化學物質之運作，是否於運作前向直轄市、縣（市）主管機關申報該毒性化學物質之毒理相關資料，並經該主管機關核可，並依核可文件內容運作。",
+                    "title": "第四類毒性化學物質之運作，是否於運作前向直轄市、縣（市）主管機關申報該毒性化學物質之毒理相關資料，並經該主管機關核可，並依核可文件內容運作。",
+                    "isRequired": true,
+                    "choices": [
+                        {"value": "符合", "text": "符合"},
+                        {"value": "不符合", "text": "不符合"},
+                        {"value": "不適用", "text": "不適用"}
+                    ]
+                },
+                {
+                    "type": "radiogroup",
+                    "name": "建築物檢查_1",
+                    "title": "依廠內建築物類別，是否依檢查頻率落實執行防火避難設施之檢查。",
+                    "isRequired": true,
+                    "choices": [
+                        {"value": "符合", "text": "符合"},
+                        {"value": "不符合", "text": "不符合"},
+                        {"value": "不適用", "text": "不適用"}
+                    ]
+                },
+                {
+                    "type": "text",
+                    "inputType": "text",
+                    "name": "其他違規事項",
+                    "title": "是否有無其他違規事項（請說明）",
+                    "isRequired": false
+                }
+            ]
+        },
+        {
+            "name": "chemicalPage",
+            "elements": [
+                {
+                    "type": "radiogroup",
+                    "name": "是否有無化學物品",
+                    "title": "貴公司是否有化學品？",
+                    "isRequired": true,
+                    "choices": [
+                        {"value": true, "text": "是"},
+                        {"value": false, "text": "否"}
+                    ]
+                },
+                {
+                    "type": "panelDynamic",
+                    "name": "化學品詳細資訊",
+                    "title": "化學品詳細資訊",
+                    "visibleIf": "{是否有無化學物品} = true",
+                    "templateTitle": "化學品 #{panelIndex}",
+                    "panelCount": 1,
+                    "minPanelCount": 1,
+                    "maxPanelCount": 10,
+                    "templateElements": [
+                        {
+                            "type": "text",
+                            "name": "化學品名稱",
+                            "title": "化學品名稱",
+                            "isRequired": true
+                        },
+                        {
+                            "type": "text",
+                            "name": "數量",
+                            "title": "數量",
+                            "inputType": "number",
+                            "isRequired": true
+                        },
+                        {
+                            "type": "dropdown",
+                            "name": "單位",
+                            "title": "單位",
+                            "choices": [
+                                "ml",
+                                "l",
+                                "kg",
+                                "g"
+                            ]
+                        },
+                        {
+                            "type": "dropdown",
+                            "name": "儲存位置",
+                            "title": "儲存位置",
+                            "choices": [
+                                "倉庫",
+                                "實驗室",
+                                "生產線",
+                                "其他"
+                            ]
+                        },
+                        {
+                            "type": "checkbox",
+                            "name": "危害特性",
+                            "title": "危害特性",
+                            "choices": [
+                                "易燃",
+                                "腐蝕性",
+                                "毒性",
+                                "反應性"
+                            ]
+                        }
+                    ],
+                    "panelAddText": "新增化學品",
+                    "panelRemoveText": "移除化學品"
+                }
+            ]
+        }
+
+
+    ],
+    "showPageTitles": true,
+    "showQuestionNumbers": "off",
+    "completedHtml": "<h3>化學品管理自主檢核表已完成</h3><p>感謝您仔細填寫每個檢核表。</p>"
+}
