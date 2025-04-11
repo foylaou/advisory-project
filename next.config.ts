@@ -2,7 +2,6 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
 reactStrictMode: true,
-  swcMinify: true,
   output: 'standalone', // 建議用於生產環境部署
   async rewrites() {
       return [
