@@ -74,10 +74,19 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 使用 Puppeteer 將 HTML 轉換為 PDF
     const browser = await puppeteer.launch({
-      headless: true,  // 使用 true 而不是 'new'
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      headless: true,
+      executablePath: process.env.NODE_ENV === 'production'
+        ? '/usr/bin/google-chrome-stable'  // Docker 環境中 Chrome 的路徑
+        : undefined,                        // 開發環境使用 Puppeteer 內建的 Chrome
+      args: [
+        '--no-sandbox',                    // 在 Docker 中必須
+        '--disable-setuid-sandbox',        // 增加安全性
+        '--disable-dev-shm-usage',         // 避免 Docker 中的記憶體問題
+        '--disable-gpu',                   // 禁用 GPU 加速
+        '--disable-software-rasterizer',   // 提高穩定性
+        '--font-render-hinting=none'       // 改善字體渲染
+      ]
     });
-
     const page = await browser.newPage();
     await page.setContent(htmlContent, { waitUntil: 'domcontentloaded' });
 
