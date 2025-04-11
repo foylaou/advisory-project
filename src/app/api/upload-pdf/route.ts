@@ -1,24 +1,36 @@
 // app/api/upload-pdf/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { mkdir } from 'fs/promises';
+import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
 import SambaClient from 'samba-client';
 
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as Blob;
-    const surveyId = formData.get('surveyId') as string;
-    const responseId = formData.get('responseId') as string;
+    const file = formData.get('pdf') as Blob;  // 修正: 從 'file' 改為 'pdf'
+    const surveyData = formData.get('surveyData') as string;  // 獲取調查數據
 
-    if (!file || !surveyId || !responseId) {
-      return NextResponse.json({ error: '缺少必要參數' }, { status: 400 });
+    if (!file) {
+      return NextResponse.json({ error: '缺少PDF文件' }, { status: 400 });
+    }
+
+    // 生成唯一的文件名
+    const timestamp = new Date().getTime();
+    const randomStr = Math.random().toString(36).substring(2, 8);
+    const filename = `survey_${timestamp}_${randomStr}.pdf`;
+
+    // 解析調查數據到日誌中，但不創建未使用的變數
+    try {
+      if (surveyData) {
+        // 只解析並記錄，不賦值給未使用的變數
+        console.log('調查數據解析成功，長度:', JSON.parse(surveyData).length || '未知');
+      }
+    } catch (e) {
+      console.warn('無法解析調查數據:', e);
     }
 
     // 將文件轉換為 Buffer
     const buffer = Buffer.from(await file.arrayBuffer());
-    const filename = `survey_${surveyId}_response_${responseId}.pdf`;
 
     // 確保本地上傳目錄存在
     const uploadDir = path.join(process.cwd(), 'public', 'uploads');

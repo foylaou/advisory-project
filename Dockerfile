@@ -4,6 +4,11 @@ FROM oven/bun:1.2.8 as base
 # 設定工作目錄
 WORKDIR /app
 
+# 安裝 smbclient (基於 Ubuntu/Debian)
+RUN apt-get update && apt-get install -y \
+    smbclient \
+    && rm -rf /var/lib/apt/lists/*
+
 # 複製專案檔案
 COPY . .
 
@@ -18,6 +23,11 @@ FROM oven/bun:1.2.8-slim as runner
 
 # 設定環境變數
 ENV NODE_ENV=production
+
+# 安裝 smbclient (同樣在生產環境需要)
+RUN apt-get update && apt-get install -y \
+    smbclient \
+    && rm -rf /var/lib/apt/lists/*
 
 # 設定工作目錄
 WORKDIR /app

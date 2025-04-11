@@ -1,83 +1,62 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { useRef, useState } from 'react';
-
-export default function Home() {
+import { toast } from 'react-hot-toast'; // 假設您已安裝了 react-hot-toast
+export default function SurveyCodePage() {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-
-  const surveyIdRef = useRef<HTMLInputElement>(null);
-  const responseIdRef = useRef<HTMLInputElement>(null);
+  const [surveyCode, setSurveyCode] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
 
-    const surveyId = surveyIdRef.current?.value;
-    const responseId = responseIdRef.current?.value;
-
-    if (surveyId && responseId) {
-      router.push(`/chemical-compliance-review/${surveyId}/${responseId}`);
-    } else {
-      setLoading(false);
-      alert('請輸入完整資訊');
+    // 驗證表單代碼
+    if (surveyCode.trim() === '') {
+      alert('請輸入有效的表單代碼');
+      return;
     }
+    if(surveyCode.trim() === "04861064" ) {
+            router.push(`/chemical-compliance`);
+    }
+    // 導航到相應的調查頁面
+        toast.error("查無此代碼")
   };
 
   return (
-    <div className="daisy-container mx-auto p-4 min-h-screen bg-gray-50 flex flex-col items-center justify-center">
-      <div className="daisy-panel w-full max-w-md bg-white rounded-lg shadow-md p-6">
-        <div className="daisy-panel-header">
-          <h1 className="text-2xl font-bold text-center text-primary mb-6">測試用頁面</h1>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-blue-100 p-4">
+      <div className="w-full max-w-md bg-white shadow-xl rounded-xl p-8 space-y-6">
+        <h1 className="text-2xl font-bold text-center text-gray-800 mb-4">
+          輸入表單代碼
+        </h1>
 
-        <div className="daisy-panel-body">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="daisy-form-item">
-              <label className="daisy-label block text-sm font-medium text-gray-700 mb-1">
-                表單 ID
-              </label>
-              <input
-                type="text"
-                placeholder="請輸入表單ID"
-                name="surveyId"
-                required
-                ref={surveyIdRef}
-                className="daisy-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition duration-200"
-              />
-            </div>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="relative">
+            <input
+              type="text"
+              value={surveyCode}
+              onChange={(e) => setSurveyCode(e.target.value)}
+              placeholder="請輸入您的表單代碼"
+              className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
+              aria-label="Survey Code"
+            />
+            <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z" />
+              </svg>
+            </span>
+          </div>
 
-            <div className="daisy-form-item">
-              <label className="daisy-label block text-sm font-medium text-gray-700 mb-1">
-                回應 ID
-              </label>
-              <input
-                type="text"
-                placeholder="請輸入回應ID"
-                name="responseId"
-                required
-                ref={responseIdRef}
-                className="daisy-input w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary-500 transition duration-200"
-              />
-            </div>
+          <button
+            type="submit"
+            className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 ease-in-out transform hover:scale-101"
+          >
+            確認提交
+          </button>
+        </form>
 
-            <div className="daisy-form-item mt-6">
-              <button
-                className="daisy-btn daisy-btn-primary w-full py-2 px-4 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-md shadow-sm transition duration-200 flex items-center justify-center"
-                type="submit"
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <span className="daisy-loading daisy-loading-spinner mr-2"></span>
-                    處理中...
-                  </>
-                ) : '前往頁面'}
-              </button>
-            </div>
-          </form>
-        </div>
+        <p className="text-center text-sm text-gray-500 mt-4">
+          請輸入您收到的唯一表單代碼
+        </p>
       </div>
     </div>
   );
