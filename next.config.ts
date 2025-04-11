@@ -4,6 +4,14 @@ const nextConfig: NextConfig = {
 reactStrictMode: true,
   swcMinify: true,
   output: 'standalone', // 建議用於生產環境部署
+  async rewrites() {
+      return [
+        {
+          source: '/uploads/:path*',
+          destination: '/api/serve-file/:path*',
+        },
+      ];
+    },
   async headers() {
     return [
       {

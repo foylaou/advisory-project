@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mkdir } from 'fs/promises';
+import { mkdir, access } from 'fs/promises';
 import path from 'path';
 import puppeteer from 'puppeteer';
 
@@ -18,11 +18,24 @@ interface SurveyData {
 // 創建臨時目錄用於存儲 HTML 和生成的 PDF
 async function ensureDirExists(dirPath: string): Promise<void> {
   try {
-    await mkdir(dirPath, { recursive: true });
+    // Check if directory exists
+    await access(dirPath);
   } catch (error) {
     Error(error as string);
-    // 忽略目錄已存在的錯誤
+    try {
+      await mkdir(dirPath, { recursive: true });
+      console.log(`Directory created: ${dirPath}`);
+    } catch (mkdirError) {
+      console.error(`Error creating directory: ${dirPath}`, mkdirError);
+      throw new Error(`Failed to create directory: ${dirPath}`);
+    }
   }
+}
+
+// 獲取上傳目錄的絕對路徑
+function getUploadPath(): string {
+  // 直接從項目根目錄獲取 upload_file/uploads 路徑
+  return path.join(process.cwd(), 'upload_file', 'uploads');
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
@@ -40,7 +53,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
       surveyData = JSON.parse(surveyDataStr);
     } catch (error) {
-      Error(error as string);
+      console.error('解析調查數據失敗:', error);
       return NextResponse.json({ error: '無效的調查數據格式' }, { status: 400 });
     }
 
@@ -49,12 +62,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const randomStr = Math.random().toString(36).substring(2, 8);
     const filename = `survey_${timestamp}_${randomStr}`;
 
-    // 確保上傳目錄存在
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads');
+    // 獲取上傳目錄並確保其存在
+    const uploadDir = getUploadPath();
     await ensureDirExists(uploadDir);
 
+    // 完整的 PDF 文件路徑
     const pdfPath = path.join(uploadDir, `${filename}.pdf`);
     const htmlContent = generateHTML(surveyData, signature1, signature2);
+
+    console.log(`Generating PDF at: ${pdfPath}`);
 
     // 使用 Puppeteer 將 HTML 轉換為 PDF
     const browser = await puppeteer.launch({
@@ -74,13 +90,16 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     await browser.close();
 
-    // 返回 PDF 的 URL
+    // 返回 PDF 的 URL (需要配置 Next.js 以提供對外部目錄的訪問)
     const fileUrl = `/uploads/${filename}.pdf`;
+
+    console.log(`PDF generated successfully: ${pdfPath}`);
 
     return NextResponse.json({
       success: true,
       fileUrl,
-      message: 'PDF 已成功生成'
+      message: 'PDF 已成功生成',
+      filePath: pdfPath // 可選: 返回文件的完整路徑，僅用於調試
     });
 
   } catch (error) {
@@ -94,6 +113,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
 // 生成 HTML 內容的輔助函數
 function generateHTML(surveyData: SurveyData, signature1?: string, signature2?: string): string {
+  // HTML生成代碼保持不變...
   // 格式化日期
   const now = new Date();
   const formattedDate = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
