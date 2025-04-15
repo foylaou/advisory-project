@@ -2,24 +2,31 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { toast } from 'react-hot-toast'; // 假設您已安裝了 react-hot-toast
+
 export default function SurveyCodePage() {
   const router = useRouter();
   const [surveyCode, setSurveyCode] = useState('');
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    setError(""); // 重置錯誤訊息
 
     // 驗證表單代碼
     if (surveyCode.trim() === '') {
-      alert('請輸入有效的表單代碼');
+      setError('請輸入有效的表單代碼');
       return;
     }
-    if(surveyCode.trim() === "04861064" ) {
-            router.push(`/chemical-compliance`);
+    
+    // 驗證正確的代碼
+    if (surveyCode.trim() === "04861064") {
+      // 導航到相應的調查頁面
+      router.push(`/chemical-compliance`);
+      return;
     }
-    // 導航到相應的調查頁面
-        toast.error("查無此代碼")
+    else{
+      setError("查無此代碼");
+    }
   };
 
   return (
@@ -53,7 +60,9 @@ export default function SurveyCodePage() {
             確認提交
           </button>
         </form>
-
+        <p className="text-center text-sm text-red-500 mt-4">
+          {error}
+        </p>
         <p className="text-center text-sm text-gray-500 mt-4">
           請輸入您收到的唯一表單代碼
         </p>

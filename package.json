@@ -29,6 +29,7 @@
     "react-to-print": "^3.0.5",
     "samba-client": "^7.2.0",
     "smb2": "^0.2.11",
+    "survey-core": "^2.0.4",
     "survey-react-ui": "^2.0.4"
   },
   "devDependencies": {
