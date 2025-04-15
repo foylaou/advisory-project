@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { mkdir, access } from 'fs/promises';
+import { mkdir, access,stat } from 'fs/promises';
 import path from 'path';
 import puppeteer from 'puppeteer';
-
+import {saveSurveyResponseWithPDF} from "@/services/SurveyServices";
 // 定義調查數據類型
 interface SurveyData {
   [key: string]:
@@ -39,11 +39,38 @@ function getUploadPath(): string {
 }
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
+  console.log("API route triggered");
+
   try {
-    const formData = await request.formData();
+    console.log("Trying to parse formData");
+    let formData;
+
+    try {
+      formData = await request.formData();
+      console.log("FormData parsed successfully");
+    } catch (formError) {
+      console.error("FormData parsing failed:", formError);
+      return NextResponse.json({
+        error: '無法解析表單數據',
+        details: formError instanceof Error ? formError.message : '未知錯誤'
+      }, { status: 400 });
+    }
+
+    console.log("FormData keys:", [...formData.keys()]);
+
     const signature1 = formData.get('signature1') as string | undefined;
     const signature2 = formData.get('signature2') as string | undefined;
     const surveyDataStr = formData.get('surveyData') as string;
+    const surveyid = formData.get('surveyUUID') as string;
+
+    console.log("FormData contents:", {
+      hasSig1: !!signature1,
+      sig1Length: signature1?.length,
+      hasSig2: !!signature2,
+      sig2Length: signature2?.length,
+      hasSurveyData: !!surveyDataStr,
+      surveyIdExists: !!surveyid
+    });
 
     if (!surveyDataStr) {
       return NextResponse.json({ error: '缺少調查數據' }, { status: 400 });
@@ -101,24 +128,58 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 返回 PDF 的 URL (需要配置 Next.js 以提供對外部目錄的訪問)
     const fileUrl = `/uploads/${filename}.pdf`;
-
+    // 獲取文件大小
+    const fileStats = await stat(pdfPath);
+    const fileSize = fileStats.size;
     console.log(`PDF generated successfully: ${pdfPath}`);
+    // 保存調查結果和PDF文件信息到數據庫
+      try {
+        const dbResult = await saveSurveyResponseWithPDF(
+          surveyid,
+          surveyDataStr,
+          {
+            fileName: `${filename}.pdf`,
+            fileType: 'application/pdf',
+            fileUrl: fileUrl,
+            fileSize: fileSize
+          }
+        );
 
-    return NextResponse.json({
-      success: true,
-      fileUrl,
-      message: 'PDF 已成功生成',
-      filePath: pdfPath // 可選: 返回文件的完整路徑，僅用於調試
-    });
+        console.log("Successfully saved to database:", dbResult);
 
-  } catch (error) {
-    console.error('生成 PDF 時發生錯誤:', error);
-    return NextResponse.json({
-      error: '生成 PDF 失敗',
-      details: error instanceof Error ? error.message : '未知錯誤'
-    }, { status: 500 });
+        return NextResponse.json({
+          success: true,
+          fileUrl,
+          message: 'PDF 已成功生成並保存到數據庫',
+          responseId: dbResult.response.id,
+          fileId: dbResult.file.id
+        });
+
+      } catch (dbError) {
+        console.error('保存到數據庫失敗:', dbError);
+
+        // 即使數據庫保存失敗，我們仍然返回PDF URL
+        return NextResponse.json({
+          success: true,
+          fileUrl,
+          message: 'PDF 已成功生成，但保存到數據庫失敗',
+          error: dbError instanceof Error ? dbError.message : '未知數據庫錯誤',
+          filePath: pdfPath
+        });
+      }
+
+    } catch (error) {
+      console.error('生成 PDF 時發生錯誤:', error);
+      return NextResponse.json({
+        error: '生成 PDF 失敗',
+        details: error instanceof Error ? error.message : '未知錯誤'
+      }, { status: 500 });
+    }
   }
-}
+
+
+
+
 
 // 生成 HTML 內容的輔助函數
 function generateHTML(surveyData: SurveyData, signature1?: string, signature2?: string): string {

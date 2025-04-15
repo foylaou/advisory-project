@@ -1,31 +1,42 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { getSurvey } from "@/services/SurveyServices";
 
-export default function SurveyCodePage() {
+export default function Page() {
   const router = useRouter();
   const [surveyCode, setSurveyCode] = useState('');
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(""); // 重置錯誤訊息
 
-    // 驗證表單代碼
+    // 驗證表單代碼是否為空
     if (surveyCode.trim() === '') {
       setError('請輸入有效的表單代碼');
       return;
     }
-    
-    // 驗證正確的代碼
-    if (surveyCode.trim() === "04861064") {
-      // 導航到相應的調查頁面
-      router.push(`/chemical-compliance`);
-      return;
-    }
-    else{
-      setError("查無此代碼");
+
+    setLoading(true);
+
+    try {
+      const result = await getSurvey(surveyCode.trim());
+
+      // 檢查是否找到了survey
+      if (result) {
+        // 導航到相應的調查頁面
+        router.push(`/Survey/${result.id}`);
+      } else {
+        setError("查無此代碼");
+      }
+    } catch (err) {
+      console.error("獲取調查時出錯:", err);
+      setError("發生錯誤，請稍後再試");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,6 +56,7 @@ export default function SurveyCodePage() {
               placeholder="請輸入您的表單代碼"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-300"
               aria-label="Survey Code"
+              disabled={loading}
             />
             <span className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
               <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -56,13 +68,16 @@ export default function SurveyCodePage() {
           <button
             type="submit"
             className="w-full bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition duration-300 ease-in-out transform hover:scale-101"
+            disabled={loading}
           >
-            確認提交
+            {loading ? '處理中...' : '確認提交'}
           </button>
         </form>
-        <p className="text-center text-sm text-red-500 mt-4">
-          {error}
-        </p>
+        {error && (
+          <p className="text-center text-sm text-red-500 mt-4">
+            {error}
+          </p>
+        )}
         <p className="text-center text-sm text-gray-500 mt-4">
           請輸入您收到的唯一表單代碼
         </p>

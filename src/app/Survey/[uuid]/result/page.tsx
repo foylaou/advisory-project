@@ -1,3 +1,4 @@
+//src/app/Survey/[uuid]/result/page.tsx
 "use client"
 import axios from 'axios';
 import SignatureComponent, { SignatureComponentHandle } from "@/components/Signature";
@@ -29,16 +30,19 @@ export default function ResultPage() {
   const [formattedDate, setFormattedDate] = useState<string>('');
   const [surveyResults, setSurveyResults] = useState<SurveyResult | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [uuid, setUuid] = useState<string | null>(null);
 // 頁面 mount 時先打一包「空請求」初始化
 
   // 在組件掛載時從 localStorage 讀取調查結果
   useEffect(() => {
+    const storedUUID = localStorage.getItem('surveyUUID');
     const storedResults = localStorage.getItem('surveyResults');
-    if (storedResults) {
+    if (storedResults&&storedUUID) {
       setSurveyResults(JSON.parse(storedResults));
+      setUuid(storedUUID);
     } else {
       // 如果沒有調查結果，重定向回表單頁面
-      router.push('/chemical-compliance');
+      router.push('/Survey');
     }
 
     // 設置日期
@@ -73,6 +77,7 @@ export default function ResultPage() {
 
     try {
       console.log("🧪 Ready check:", {
+        uuid,
         surveyResults,
         signatureIsEmpty1,
         signatureIsEmpty2,
@@ -86,14 +91,19 @@ export default function ResultPage() {
       if (!signature1Image || !signature2Image) {
         throw new Error('無法獲取簽名');
       }
-
+      // 檢查uuid是否存在
+      if (!uuid) {
+        toast.error('無法獲取表單識別碼');
+        return;
+      }
       // 創建 FormData 對象
       const formData = new FormData();
       formData.append('signature1', signature1Image);
       formData.append('signature2', signature2Image);
       formData.append('surveyData', JSON.stringify(surveyResults));
+      formData.append('surveyUUID', uuid);
 
-      // 發送請求到後端 API
+    // 發送請求到後端 API
       const response = await axios.post('/api/generate-pdf', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
@@ -117,7 +127,8 @@ export default function ResultPage() {
   const handleReturn = () => {
     if (window.confirm('確定要返回並清除當前數據嗎？')) {
       localStorage.removeItem('surveyResults');
-      router.push('/chemical-compliance');
+      localStorage.removeItem('surveyUUID'); // 也清除UUID
+      router.push(`/Survey/${uuid}`); // 使路徑與其他地方一致
     }
   };
 
