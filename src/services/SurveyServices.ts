@@ -4,31 +4,53 @@ import { AppDataSource } from "@/data-source";
 import { Survey } from "@/entity/Survey";
 import { Response as SurveyResponse } from "@/entity/Response";
 import { File as SurveyFile } from "@/entity/File";
+
+
+
+/**
+ * 獲取調查問卷的數據
+ * @param codeOrUuid 調查問卷的唯一識別符（可以是代碼或UUID）
+ * @returns 調查問卷的數據作為純對象
+ * @throws Error 當找不到對應的調查問卷或發生數據庫錯誤時
+ */
 export async function getSurvey(codeOrUuid: string) {
-  if (!AppDataSource.isInitialized) {
-    await AppDataSource.initialize();
+  try {
+    console.log("開始獲取調查數據:", codeOrUuid);
+    if (!AppDataSource.isInitialized) {
+      console.log("正在初始化數據庫連接...");
+      await AppDataSource.initialize();
+      console.log("數據庫連接初始化成功");
+    }
+
+    const repo = AppDataSource.getRepository(Survey);
+    console.log("獲取存儲庫成功");
+    
+    // 先嘗試使用id查詢
+    console.log("嘗試按ID查詢:", codeOrUuid);
+    let survey = await repo.findOneBy({ id: codeOrUuid });
+    
+    // 如果沒找到，再使用code查詢
+    if (!survey) {
+      console.log("ID查詢未找到，嘗試按代碼查詢:", codeOrUuid);
+      survey = await repo.findOneBy({ code: codeOrUuid });
+    }
+    
+    console.log("查詢結果:", survey ? "找到" : "未找到");
+    
+    if (!survey) return null;
+    
+    // 將實體轉換為純對象
+    return {
+      success: true,
+      id: survey.id,
+      jsonSchema: survey.jsonSchema,
+    };
+  } catch (error) {
+    console.error("獲取調查數據時出錯:", error);
+    // 重新拋出或返回錯誤信息
+    throw error;
   }
-
-  const repo = AppDataSource.getRepository(Survey);
-
-  // 先嘗試使用id查詢
-  let survey = await repo.findOneBy({ id: codeOrUuid });
-
-  // 如果沒找到，再使用code查詢
-  if (!survey) {
-    survey = await repo.findOneBy({ code: codeOrUuid });
-  }
-
-  if (!survey) return null;
-
-  // 將實體轉換為純對象
-  return {
-    success: true,
-    id:survey.id,
-    jsonSchema: survey.jsonSchema,
-  };
 }
-
 
 /**
  * 保存問卷回覆數據到資料庫
