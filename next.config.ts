@@ -17,7 +17,6 @@ const nextConfig: NextConfig = {
     },
   },
 
-  output: 'standalone', // 適合生產環境部署
 
   async rewrites() {
     return [
