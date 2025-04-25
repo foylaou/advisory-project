@@ -15,7 +15,7 @@ export interface SignatureComponentHandle {
 }
 
 // 壓縮質量設定為 0.5
-const COMPRESSION_QUALITY = 0.5;
+
 
 const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureComponentProps>(
   ({ onSignatureChange }, ref) => {
@@ -49,12 +49,12 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
             // 使用已保存的臨時簽名
             return tempSignature;
           }
-          
+
           // 如果簽名是空的，返回空字符串
           if (sigCanvas.current.isEmpty()) {
             return "";
           }
-          
+
           // 使用無損 PNG 格式，避免背景變黑問題
           return sigCanvas.current.toDataURL('image/png');
         }
@@ -73,7 +73,7 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
         if (canvas.isEmpty()) {
           return "";
         }
-        
+
         // 獲取原始簽名數據 - 使用 PNG 格式保持透明背景
         return canvas.toDataURL('image/png');
       } catch (error) {
@@ -111,7 +111,7 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
 
       // 監聽方向變化
       const mediaQuery = window.matchMedia("(orientation: portrait)");
-      
+
       // 使用正確的事件監聽方法 (兼容舊版和新版瀏覽器)
       if (mediaQuery.addEventListener) {
         mediaQuery.addEventListener('change', checkOrientation);
@@ -190,7 +190,7 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
     const openSignatureModal = () => {
       if (isIOS) {
         setShowModal(true);
-        
+
         // 調整模態框內的畫布大小
         setTimeout(() => {
           if (modalSigCanvas.current && tempSignature && tempSignature.length > 0) {
@@ -226,28 +226,28 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
             setShowModal(false);
             return;
           }
-          
+
           // 從模態視窗獲取簽名並處理
           const dataURL = processSignature(modalSigCanvas.current);
           if (!dataURL) {
             console.error("無法獲取簽名數據");
             return;
           }
-          
+
           console.log("簽名處理完成");
           setTempSignature(dataURL);
-          
+
           // 更新簽名狀態
           setIsEmpty(false);
           if (onSignatureChange) {
             onSignatureChange(false);
           }
-          
+
           // 將簽名應用到主畫布 (在 iOS 模式中，主畫布是隱藏的，但仍需要保持數據一致性)
           if (sigCanvas.current) {
             // 清除主畫布
             sigCanvas.current.clear();
-            
+
             // 在主畫布上繪製模態視窗中的簽名
             const img = new Image();
             img.onload = () => {
@@ -266,7 +266,7 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
             };
             img.src = dataURL;
           }
-          
+
           setShowModal(false);
         } catch (error) {
           console.error("保存簽名時發生錯誤:", error);
@@ -348,14 +348,14 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
             {canvasLoaded && isIOS && (
               <>
                 {tempSignature ? (
-                  <img 
-                    src={tempSignature} 
-                    alt="您的簽名" 
-                    style={{ 
-                      width: '100%', 
-                      height: '100%', 
-                      objectFit: 'contain' 
-                    }} 
+                  <img
+                    src={tempSignature}
+                    alt="您的簽名"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      objectFit: 'contain'
+                    }}
                   />
                 ) : (
                   <div className="flex items-center justify-center h-full">
@@ -367,7 +367,7 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
                     </div>
                   </div>
                 )}
-                
+
                 {/* 隱藏的簽名畫布，用於存儲數據 */}
                 <SignatureCanvas
                   ref={sigCanvas}
@@ -399,7 +399,7 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
               </svg>
               清除簽名
             </button>
-            
+
             {isIOS && (
               <button
                 type="button"
@@ -427,7 +427,7 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
         {/* 模態簽名視窗 */}
         {showModal && (
           <div className="fixed inset-0 bg-black bg-opacity-70 z-50 flex items-center justify-center p-4">
-            <div 
+            <div
               className={`bg-white rounded-lg shadow-xl ${orientation === 'landscape' ? 'w-full h-auto max-h-[90vh]' : 'w-[95%] max-w-md'}`}
               style={{
                 maxWidth: orientation === 'landscape' ? '95vw' : '28rem',
@@ -435,18 +435,18 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
             >
               <div className="p-3 border-b border-base-200 flex justify-between items-center">
                 <h3 className="text-lg font-bold">請在下方區域簽署您的姓名</h3>
-                <button 
+                <button
                   onClick={cancelModal}
                   className="btn btn-sm btn-circle btn-ghost"
                 >
                   ✕
                 </button>
               </div>
-              
+
               <div className="p-4">
-                <div 
+                <div
                   className="border-2 border-base-300 rounded-lg bg-white mb-4"
-                  style={{ 
+                  style={{
                     height: orientation === 'landscape' ? '50vh' : '300px',
                     position: "relative",
                     overflow: "hidden"
@@ -472,25 +472,25 @@ const SignatureComponent = forwardRef<SignatureComponentHandle, SignatureCompone
                     backgroundColor="rgba(255, 255, 255, 0)" // 透明背景
                   />
                 </div>
-                
+
                 <div className="flex flex-wrap gap-2 justify-between">
-                  <button 
-                    className="btn btn-outline" 
+                  <button
+                    className="btn btn-outline"
                     onClick={clearModalSignature}
                   >
                     清除
                   </button>
-                  
+
                   <div className="flex gap-2">
-                    <button 
-                      className="btn btn-ghost" 
+                    <button
+                      className="btn btn-ghost"
                       onClick={cancelModal}
                     >
                       取消
                     </button>
-                    
-                    <button 
-                      className="btn btn-primary" 
+
+                    <button
+                      className="btn btn-primary"
                       onClick={saveSignatureFromModal}
                     >
                       保存

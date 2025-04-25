@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# static file
+/upload_file/uploads/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+/google-chrome-stable_current_amd64.deb

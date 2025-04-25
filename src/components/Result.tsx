@@ -31,6 +31,7 @@ export default function Result() {
   const [surveyResults, setSurveyResults] = useState<SurveyResult | null>(null);
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [uuid, setUuid] = useState<string | null>(null);
+  const [code, setCode] = useState<string | null>(null);
 // 頁面 mount 時先打一包「空請求」初始化
 
   // 在組件掛載時從 localStorage 讀取調查結果
@@ -40,6 +41,7 @@ export default function Result() {
     if (storedResults&&storedUUID) {
       setSurveyResults(JSON.parse(storedResults));
       setUuid(storedUUID);
+
     } else {
       // 如果沒有調查結果，重定向回表單頁面
       router.push('/Survey');
@@ -50,6 +52,28 @@ export default function Result() {
     const formatted = `${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
     setFormattedDate(formatted);
   }, [router]);
+  useEffect(() => {
+    if (!uuid) return;
+
+    setIsLoading(true);
+    axios
+      .get(`/api/getsurverycode`, {
+        params: {
+          uuid,
+        },
+      })
+      .then((res) => {
+        setCode(res.data);
+      })
+      .catch((err) => {
+        const msg = err.response?.data?.error || err.message;
+        toast.error(msg);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [uuid]);
+
 
   // 簽名狀態變化處理
   const handleSignatureChange1 = (isEmpty: boolean) => {
@@ -248,73 +272,163 @@ export default function Result() {
     return <div className="badge badge-outline badge-lg">無化學品詳細資訊</div>;
   };
 
-  // 渲染調查結果
-  const renderSurveyResults = () => {
-    if (!surveyResults) return null;
+// 優化後的渲染調查結果函數
+const renderSurveyResults = () => {
+  if (!surveyResults) return null;
 
+  // 處理不同數據類型的顯示方式
+  const renderValue = (value: any) => {
+    if (value === undefined || value === null) {
+      return <span className="badge badge-ghost badge-lg">無</span>;
+    }
+  
+    if (typeof value === 'boolean') {
+      return (
+        <span className={`badge ${value ? 'badge-success' : 'badge-error'} badge-lg`}>
+          {value ? '是' : '否'}
+        </span>
+      );
+    }
+  
+    if (typeof value === 'string') {
+      // 處理特定文字為不同badge類型
+      if (value === '不適用') {
+        return <span className="badge badge-info badge-lg">不適用</span>;
+      } else if (value === '符合') {
+        return <span className="badge badge-success badge-lg">符合</span>;
+      } else if (value === '不符合') {
+        return <span className="badge badge-error badge-lg">不符合</span>;
+      }
+      
+      // 其他字符串
+      return (
+        <span className="badge badge-ghost badge-lg whitespace-normal text-left">
+          {value}
+        </span>
+      );
+    }
+  
+    if (Array.isArray(value)) {
+      return (
+        <div className="flex flex-wrap gap-1 justify-center">
+          {value.map((item, idx) => (
+            <span key={idx} className="badge badge-ghost badge-md">
+              {String(item)}
+            </span>
+          ))}
+        </div>
+      );
+    }
+  
+    if (typeof value === 'object' && value !== null) {
+      return renderNestedObject(value);
+    }
+  
     return (
-      <div className="mb-8">
-        <h2 className="text-xl font-bold mb-4 text-primary">調查結果詳情</h2>
-        <div className="card bg-base-100 shadow-sm">
-          <div className="card-body">
-            {Object.entries(surveyResults).map(([key, value]) => {
-              if (value === undefined) return null;
+      <span className="badge badge-ghost badge-lg whitespace-normal text-left">
+        {String(value)}
+      </span>
+    );
+  };
 
-              // 特殊處理化學品詳細資訊
-              if (key === "化學品詳細資訊") {
-                return (
-                  <div key={key} className="mb-6">
-                    <div className="divider before:bg-primary/20 after:bg-primary/20">
-                      <h3 className="font-bold text-lg text-primary">{key}</h3>
-                    </div>
-                    <div className="mt-4">
-                      {renderChemicalPanel(value)}
-                    </div>
-                  </div>
-                );
-              }
-
-              // 處理長文字標題的特殊情況 - 如果標題超過特定長度，使用不同的布局
-              const isLongTitle = typeof key === 'string' && key.length > 60;
-
-              return (
-                <div key={key} className={`py-2 ${isLongTitle ? 'border-b border-base-200 pb-4' : ''}`}>
-                  <div className={isLongTitle ? "space-y-2" : "flex flex-wrap items-center gap-2"}>
-                    <div className={`font-medium text-primary ${isLongTitle ? 'mb-2' : ''}`}>
-                      {key}:
-                    </div>
-                    <div className={isLongTitle ? "ml-0" : "ml-2"}>
-                      {typeof value === 'boolean' ? (
-                        <span className={`badge ${value ? 'badge-success' : 'badge-error'} badge-lg`}>
-                          {value ? '是' : '否'}
-                        </span>
-                      ) : Array.isArray(value) ? (
-                        <div className="flex flex-wrap gap-1">
-                          {value.map((item, idx) => (
-                            <span key={idx} className="badge badge-ghost badge-md">
-                              {String(item)}
-                            </span>
-                          ))}
-                        </div>
-                      ) : typeof value === 'object' && value !== null ? (
-                        <code className="text-xs bg-base-200 p-2 rounded block overflow-x-auto whitespace-pre">
-                          {JSON.stringify(value, null, 2)}
-                        </code>
-                      ) : (
-                        <span className="badge badge-ghost badge-lg whitespace-normal text-left">
-                          {value === null ? '無' : String(value)}
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
+  // 處理巢狀物件的顯示
+  const renderNestedObject = (obj: Record<string, any>) => {
+    return (
+      <div className="card bg-base-100 shadow-sm mt-2">
+        <div className="card-body p-4">
+          <div className="overflow-x-auto w-full">
+            <table className="table table-zebra w-full table-auto">
+              <thead>
+                <tr className="bg-base-200">
+                  <th className="w-2/3 text-center">項目</th>
+                  <th className="w-1/3 text-center">內容</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(obj).map(([itemKey, itemValue]) => (
+                  <tr key={itemKey} className="hover">
+                    <td className="font-medium break-words whitespace-normal ">{itemKey}</td>
+                    <td className="break-words whitespace-normal text-center">
+                      {renderValue(itemValue)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     );
   };
+
+  // 分組處理頂層屬性
+  const basicInfo = Object.entries(surveyResults).filter(
+    ([key, value]) => typeof value !== 'object' || value === null || key === "化學品詳細資訊"
+  );
+  
+  const categoryInfo = Object.entries(surveyResults).filter(
+    ([key, value]) => typeof value === 'object' && value !== null && key !== "化學品詳細資訊"
+  );
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-xl font-bold mb-4 text-primary">調查結果詳情</h2>
+      
+      {/* 基本資訊區塊 */}
+      <div className="card bg-base-100 shadow-sm mb-6">
+        <div className="card-body">
+          <h3 className="text-lg font-bold text-primary mb-2">基本資訊</h3>
+          {basicInfo.map(([key, value]) => {
+            if (value === undefined) return null;
+            
+            // 特殊處理化學品詳細資訊
+            if (key === "化學品詳細資訊") {
+              return (
+                <div key={key} className="mb-6">
+                  <div className="divider before:bg-primary/20 after:bg-primary/20">
+                    <h3 className="font-bold text-lg text-primary">{key}</h3>
+                  </div>
+                  <div className="mt-4">
+                    {renderChemicalPanel(value)}
+                  </div>
+                </div>
+              );
+            }
+
+            // 處理長文字標題的特殊情況
+            const isLongTitle = typeof key === 'string' && key.length > 60;
+
+            return (
+              <div key={key} className={`py-2 ${isLongTitle ? 'border-b border-base-200 pb-4' : ''}`}>
+                <div className={isLongTitle ? "space-y-2" : "flex flex-wrap items-center gap-2"}>
+                  <div className={`font-medium text-primary ${isLongTitle ? 'mb-2' : ''}`}>
+                    {key}:
+                  </div>
+                  <div className={isLongTitle ? "ml-0" : "ml-2"}>
+                    {renderValue(value)}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* 分類資訊區塊 */}
+      {categoryInfo.map(([category, items]) => (
+        <div key={category} className="card bg-base-100 shadow-sm mb-6">
+          <div className="card-body">
+            <div className="divider before:bg-primary/20 after:bg-primary/20">
+              <h3 className="font-bold text-lg text-primary">{category}</h3>
+            </div>
+            <CustomStyles />
+            {renderNestedObject(items as Record<string, any>)}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-4xl">
@@ -331,29 +445,57 @@ export default function Result() {
           </div>
 
           {renderSurveyResults()}
-
           <div className="divider before:bg-primary/20 after:bg-primary/20">簽名區域</div>
 
-          <div className="mt-4">
-            <h2 className="text-xl font-bold text-primary mb-2">業者</h2>
-            <div className="p-4 border-2 border-dashed border-base-300 rounded-lg bg-base-200/50">
-              <SignatureComponent
-                ref={signature1Ref}
-                onSignatureChange={handleSignatureChange1}
-              />
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <h2 className="text-xl font-bold text-primary mb-2">檢查人員</h2>
-            <div className="p-4 border-2 border-dashed border-base-300 rounded-lg bg-base-200/50">
-              <SignatureComponent
-                ref={signature2Ref}
-                onSignatureChange={handleSignatureChange2}
-              />
-            </div>
+          {code === "SUPV" ? (
+      <>
+        <div className="mt-4">
+          <h2 className="text-xl font-bold text-primary mb-2">業者</h2>
+          <div className="p-4 border-2 border-dashed border-base-300 rounded-lg bg-base-200/50">
+            <SignatureComponent
+              ref={signature1Ref}
+              onSignatureChange={handleSignatureChange1}
+            />
           </div>
         </div>
+
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-primary mb-2">檢查人員</h2>
+          <div className="p-4 border-2 border-dashed border-base-300 rounded-lg bg-base-200/50">
+            <SignatureComponent
+              ref={signature2Ref}
+              onSignatureChange={handleSignatureChange2}
+            />
+          </div>
+        </div>
+      </>
+    ) : (
+      <>
+        <div className="mt-4">
+          <h2 className="text-xl font-bold text-primary mb-2">業者</h2>
+          <div className="p-4 border-2 border-dashed border-base-300 rounded-lg bg-base-200/50">
+            <SignatureComponent
+              ref={signature1Ref}
+              onSignatureChange={handleSignatureChange1}
+            />
+          </div>
+        </div>
+
+        <div className="mt-8">
+          <h2 className="text-xl font-bold text-primary mb-2">輔導人員</h2> {/* 👈 根據 code 可以替換標題 */}
+          <div className="p-4 border-2 border-dashed border-base-300 rounded-lg bg-base-200/50">
+            <SignatureComponent
+              ref={signature2Ref}
+              onSignatureChange={handleSignatureChange2}
+            />
+          </div>
+        </div>
+      </>
+    )}
+
+</div>
+
+
 
         <div className="card-actions justify-end p-6 bg-base-200 border-t border-base-300">
           {pdfUrl ? (
@@ -434,3 +576,30 @@ export default function Result() {
     </div>
   );
 }
+const CustomStyles = () => (
+  <style jsx global>{`
+    .badge-success {
+      background-color: #acd4ff !important;
+      color: #000000 !important;
+      border: 2px solid #0066cc !important;
+      text-decoration: none !important;
+      font-weight: bold !important;
+    }
+    
+    .badge-error {
+      background-color: #f8d1d8 !important;
+      color: #000000 !important;
+      border: 2px solid #cc0033 !important;
+      text-decoration: none !important;
+      font-weight: bold !important;
+    }
+    
+    .badge-info {
+      background-color: #d5d6d6 !important;
+      color: #000000 !important;
+      border: 2px solid #666666 !important;
+      text-decoration: none !important;
+      font-weight: bold !important;
+    }
+  `}</style>
+);
