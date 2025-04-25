@@ -467,7 +467,7 @@ const renderFinalResult = (): string => {
     <head>
       <meta charset="UTF-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>化學品安全督導報告</title>
+      <title>化學品安全管理督導報告</title>
      <style>
         /* 設定頁面基本樣式 */
         @page {
@@ -739,7 +739,7 @@ const renderFinalResult = (): string => {
     <body>
     <div class="container">
     <div class="header-section">
-      <div class="title">化學品安全督導報告</div>
+      <div class="title">化學品安全管理督導報告</div>
       <div class="date">日期: ${formattedDate}</div>
     </div>
       
